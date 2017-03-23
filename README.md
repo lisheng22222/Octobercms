@@ -1,5 +1,5 @@
 # Octobercms
-CMS---Themes
+CMS/Themes
 Introduction（介绍）
 Themes define the appearance of your website or web application built with October.
 主题是用来定义在October平台上建立的网站或者web应用程序的外观。 
