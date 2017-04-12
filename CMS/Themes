@@ -15,6 +15,7 @@ for example Git. This page gives you the high-level description of October theme
 //2017-4-12
 
 Themes are directories that reside in the /themes directory by default. Themes can contain the following objects:
+（默认情况下，Themes是在/ themes目录中，Themes包含以下几个对象）
 
 Object(对象）     	Description(描述）
 Pages	            represent the website pages.(表示网站页面）
