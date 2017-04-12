@@ -11,3 +11,15 @@ for example Git. This page gives you the high-level description of October theme
 
  You will find more details about pages, partials, layouts and content files in the corresponding articles.
  您将在相应的文章中找到有关pages，partials，layouts和content files的更多详细信息.  
+
+//2017-4-12
+
+Themes are directories that reside in the /themes directory by default. Themes can contain the following objects:
+（默认情况下，Themes是在/ themes目录中，Themes包含以下几个对象）
+
+Object(对象）     	Description(描述）
+Pages	            represent the website pages.(表示网站页面）
+Partials	         contain reusable chunks of HTML markup.(包含可重复使用的HTML标记块)
+Layouts      	    define the page scaffold.(定义页脚手架)
+Content files	    text, HTML or Markdown blocks that can be edited separately from the page or layout.(从pages或者layout中，文本，HTML或Markdown块可以分开编辑)
+Asset files	are resource files like images, CSS and JavaScript files.(Asset是资源文件夹，就如同images，CSS，javaScripte文件夹一样)
