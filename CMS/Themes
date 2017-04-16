@@ -23,3 +23,35 @@ Partials	         contain reusable chunks of HTML markup.(包含可重复使用�
 Layouts      	    define the page scaffold.(定义页脚手架)
 Content files	    text, HTML or Markdown blocks that can be edited separately from the page or layout.(从pages或者layout中，文本，HTML或Markdown块可以分开编辑)
 Asset files	are resource files like images, CSS and JavaScript files.(Asset是资源文件夹，就如同images，CSS，javaScripte文件夹一样)
+
+
+//2017/4-16
+
+Directory structure(目录结构）
+
+Below you can see an example theme directory structure. Each October theme is represented with a separate directory and generally one active theme is used for displaying the website. 
+（下面，你会看见一个关于主题目录结构的例子，每个October的主题都有一个单独的目录,并且一个active theme一般是用来显示网站。）
+This example displays the "website" theme directory.
+（这个例子展示了 “网站”主题目录结构）
+
+themes/
+  website/           <=== Theme starts here（主题从这里开始）
+    pages/           <=== Pages directory（网站页面目录）
+      home.htm
+    layouts/         <=== Layouts directory（布局目录）
+      default.htm
+    partials/        <=== Partials directory（Partials目录）
+      sidebar.htm
+    content/         <=== Content directory（内容目录）
+      intro.htm
+    assets/          <=== Assets directory（资源目录）
+      css/
+        my-styles.css
+      js/
+      images/
+The active theme is set with the activeTheme parameter in the config/cms.
+（活动主题是通过config / cms中的activeTheme参数设置）。
+php file or with the Theme Selector on the System > CMS > Front-end Theme back-end page. 
+（php文件或主题选择是在System>CMS> Front-end Theme back-end page）
+The theme set with the Theme Selector overrides the value in the config/cms.php file.
+(使用主题选择器设置的主题将覆盖config / cms.php文件中的值。)
