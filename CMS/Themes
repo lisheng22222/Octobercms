@@ -55,3 +55,43 @@ php file or with the Theme Selector on the System > CMS > Front-end Theme back-e
 （php文件或主题选择是在System>CMS> Front-end Theme back-end page）
 The theme set with the Theme Selector overrides the value in the config/cms.php file.
 (使用主题选择器设置的主题将覆盖config / cms.php文件中的值。)
+
+//2017-5-8
+Subdirectories(子目录）
+
+October supports a single level subdirectories for pages, partials, layouts and content files 
+(October支持对pages,partials,layouts和content文件的单级子目录。
+(the assets directory can have any structure). This simplifies organizing large websites. 
+（assets目录可以有任何的结构）,这简化了组织大型网站
+In the example directory structure below you can see that the pages and partials directories contain the blog subdirectory and the content directory contains the home subdirectory.
+（在下面的示例目录结构中，你可以看见pages和partials目录中包含了blog子目录，content目录包含了home子目录）
+themes/
+  website/
+    pages/
+      home.htm
+      blog/                  <=== Subdirectory（子目录）
+        archive.htm
+        category.htm
+    partials/
+      sidebar.htm
+      blog/                  <=== Subdirectory（子目录）
+        category-list.htm
+    content/
+      footer-contacts.txt
+      home/                  <=== Subdirectory（子目录）
+        intro.htm
+    ...
+To refer to a partial or a content file from a subdirectory, 
+（要从一个子目录中引用partials或者content文件）
+specify the subdirectory name before the template name. Example of rendering a partial from a subdirectory:
+（在模板名称之前指定子目录名，下面一个example关于从一个子目录中渲染一个partial)
+{% partial "blog/category-list" %}
+Note: The template paths are always absolute. 
+(注意：模板路径总是绝对的)
+If in a partial you render another partial from the same subdirectory you still need to specify the subdirectory name.
+(在同一个子目录下，如果想从一个partial中渲染另一个partial，你仍然还是需要指定子目录名称）
+
+
+
+
+
