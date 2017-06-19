@@ -1,0 +1,116 @@
+Introduction介绍
+Update process更新过程
+    Plugin depedencies插件依赖关系
+Plugin version file插件版本文件
+    Important updates重要更新
+    Migration and seed files迁移和种子文件
+
+Introduction
+
+It is good practice for plugins to maintain a change log that documents any changes or improvements in the code. In addition to writing notes about changes, this process has the useful ability to execute migration and seed files in their correct order.
+插件是维护更改日志的良好做法，用于记录代码中的任何更改或改进。 除了编写有关更改的注释外，此过程还具有以正确的顺序执行迁移和种子文件的有用功能。
+
+The change log is stored in a YAML file called version.yaml inside the /updates directory of a plugin, which co-exists with migration and seed files. This example displays a typical plugin updates directory structure:
+更改日志存储在插件的/ updates目录中的名为version.yaml的YAML文件中，该目录与迁移和种子文件共存。 此示例显示典型的plugin updates目录结构：
+
+plugins/
+  author/
+    myplugin/
+      updates/                      <=== Updates directory
+        version.yaml                <=== Plugin version file
+        create_tables.php           <=== Database scripts
+        seed_the_database.php       <=== Migration file
+        create_another_table.php    <=== Migration file
+
+Update process更新过程
+
+During an update the system will notify the user about recent changes to plugins, it can also prompt them about important or breaking changes. Any given migration or seed file will only be excuted once after a successful update. October executes the update process automatically when any of the following occurs:
+在更新过程中，系统将通知用户关于插件的最近更改，还可以提示他们重要或突破性的更改。 任何给定的迁移或种子文件只能在成功更新后被排除一次。 当发生以下任何一种情况时，10月份会自动执行更新过程：
+
+1.When an administrator signs in to the back-end.
+当管理员登录到后端时。
+2.When the system is updated using the update feature in the back-end area.
+当使用后端区域中的更新功能更新系统时。
+3.When the console command php artisan october:up is called in the command line from the application directory.
+当控制台命令php artisan October：up在应用程序目录的命令行中调用。
+
+Note: The plugin initialization process is disabled during the update process, this should be a consideration in migration and seeding scripts.
+
+注意：插件初始化过程在更新过程中被禁用，这在迁移和播种脚本中应该是一个考虑因素。
+
+Plugin depedencies插件依赖关系
+
+Updates are applied in a specific order, based on the defined dependencies in the plugin registration file. Plugins that are dependant will not be updated until all their dependencies have been updated first.
+基于插件注册文件中定义的依赖关系，更新以特定顺序应用。 依赖的插件将不会被更新，直到其所有依赖关系先被更新为止。
+
+<?php namespace Acme\Blog;
+
+class Plugin extends \System\Classes\PluginBase
+{
+    public $require = ['Acme.User'];
+}
+
+In the example above the Acme.Blog plugin will not be updated until the Acme.User plugin has been fully updated.
+在上面的例子中Acme.Blog插件将不会被更新，直到Acme.User插件被完全更新。
+
+Plugin version file 插件版本文件
+
+The version.yaml file, called the Plugin version file, contains the version comments and refers to database scripts in the correct order. Please read the Database structure article for information about the migration files. This file is required if you're going to submit the plugin to the Marketplace. Here is an example of a plugin version file:
+称为插件版本文件的version.yaml文件包含版本注释，并以正确的顺序引用数据库脚本。 有关迁移文件的信息，请阅读数据库结构文章。 如果要将插件提交到Marketplace，则需要此文件。 以下是插件版本文件的示例：
+
+1.0.1: First version
+1.0.2: Second version
+1.0.3: Third version
+1.1.0: !!! Important update
+1.1.1:
+    - Update with a migration and seed
+    - create_tables.php
+    - seed_the_database.php
+
+As you can see above, there should be a key that represents the version number followed by the update message, which is either a string or an array containing the update message. For updates that refer to migration or seeding files, the first line is always the comment, then subsequent lines are script file names. An example of a comment with no associated update files:
+如上所述，应该有一个键代表更新消息后面的版本号，它是一个字符串或包含更新消息的数组。 对于引用迁移或播种文件的更新，第一行始终为注释，则后续行为脚本文件名。 没有关联的更新文件的注释示例：
+
+    1.0.1: A single comment that uses no update scripts.
+
+
+Important updates重要更新
+
+Sometimes a plugin needs to introduce features that will break websites already using the plugin. If an update comment in the version.yaml file begins with three exclamation marks (!!!) then it will be considered Important and will require the user to confirm before updating. An example of an important update comment:
+有时插件需要引入功能来破坏已经使用插件的网站。 如果version.yaml文件中的更新注释以三个感叹号（!!!）开头，那么它将被视为重要的，并将要求用户在更新之前进行确认。 一个重要更新评论的例子：
+1.1.0: !!! This is an important update that contains breaking changes.
+
+When the system detects an important update it will provide three options to proceed:
+当系统检测到重要更新时，它将提供三个选项来进行：
+
+Confirm update确认更新
+Skip this plugin (once only)跳过这个插件（一次）
+Skip this plugin (always)跳过这个插件（总是）
+
+Confirming the comment will update the plugin as usual, or if the comment is skipped it will not be updated.
+确认评论将照常更新插件，或者如果注释被跳过，则不会更新。
+
+Migration and seed files迁移和种子文件
+
+As previously decribed, updates also define when migration and seed files should be applied. An update line with a comment and updates:
+如前所述，更新还定义何时应用迁移和种子文件。 具有评论和更新的更新行：
+
+1.1.1:
+    - This update will execute the two scripts below.
+    - some_upgrade_file.php
+    - some_seeding_file.php
+
+The update file name should use snake_case while the containing PHP class should use CamelCase. For a file named some_upgrade_file.php the corresponding class would be SomeUpgradeFile.
+更新文件名应该使用snake_case，而包含的PHP类应该使用CamelCase。 对于名为some_upgrade_file.php的文件，相应的类将为SomeUpgradeFile。
+
+<?php namespace Acme\Blog\Updates;
+
+use Schema;
+use October\Rain\Database\Updates\Migration;
+
+/**
+ * some_upgrade_file.php
+ */
+class SomeUpgradeFile extends Migration
+{
+    ///
+}
