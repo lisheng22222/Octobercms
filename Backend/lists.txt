@@ -1,0 +1,549 @@
+Introduction
+Configuring the list behavior
+Adding a toolbar
+Filtering the list
+Defining list columns
+Column options
+Available column types
+Displaying the list
+Multiple list definitions
+Using list filters
+Scope options
+Available scope types
+Extending list behavior
+Overriding controller action
+Overriding views
+Extending column definitions
+Extending the model query
+Extending the records collection
+Custom column types
+
+
+Introduction
+
+List behavior is a controller modifier used for easily adding a record list to a page. The behavior provides the sortable and searchable list with optional links on its records. The behavior provides the controller action index however the list can be rendered anywhere and multiple list definitions can be used.
+列表行为是一个控制器修饰符，用于轻松地向页面添加记录列表。 该行为提供可排序和可搜索的列表，其记录上包含可选链接。 该行为提供了控制器操作索引，但是列表可以在任何地方呈现，并且可以使用多个列表定义。
+
+List behavior depends on list column definitions and a model class. In order to use the list behavior you should add it to the $implement property of the controller class. Also, the $listConfig class property should be defined and its value should refer to the YAML file used for configuring the behavior options.
+列表行为取决于列表列定义和模型类。 为了使用列表行为，您应该将其添加到控制器类的$ implement属性。 此外，应该定义$ listConfig类属性，其值应该引用用于配置行为选项的YAML文件。
+
+namespace Acme\Blog\Controllers;
+
+class Categories extends \Backend\Classes\Controller
+{
+    public $implement = ['Backend.Behaviors.ListController'];
+
+    public $listConfig = 'list_config.yaml';
+}
+
+Note: Very often the list and form behavior are used together in a same controller.
+注意：列表和表单行为通常在同一控制器中一起使用。
+
+Configuring the list behavior
+配置列表行为
+
+The configuration file referred in the $listConfig property is defined in YAML format. The file should be placed into the controller's views directory. Below is an example of a typical list behavior configuration file:
+$ listConfig属性中引用的配置文件以YAML格式定义。 该文件应放置在控制器的视图目录中。 以下是典型列表行为配置文件的示例：
+
+# ===================================
+#  List Behavior Config
+# ===================================
+
+title: Blog Posts
+list: ~/plugins/acme/blog/models/post/columns.yaml
+modelClass: Acme\Blog\Models\Post
+recordUrl: acme/blog/posts/update/:id
+
+The following fields are required in the list configuration file:
+列表配置文件中需要以下字段：
+
+Field	Description
+title	  a title for this list.
+这个名单的标题。
+list	   a configuration array or reference to a list column definition file, see list columns.
+配置数组或列表列定义文件的引用，请参见列表列。
+modelClass	a model class name, the list data is loaded from this model.
+一个模型类名，从这个模型加载列表数据。
+
+The configuration options listed below are optional.
+下面列出的配置选项是可选的。
+
+Option	         Description
+filter	         filter configuration, see filtering the list.
+过滤器配置，请参阅过滤列表。
+recordUrl	  link each list record to another page. Eg: users/update:id. The :id part is replaced with the record identifier. This allows you to link the list behavior and the form behavior.
+将每个列表记录链接到另一个页面。 例如：users / update：id。 将：id部分替换为记录标识符。 这允许您链接列表行为和表单行为。
+recordOnClick	  custom JavaScript code to execute when clicking on a record.
+点击记录时执行的自定义JavaScript代码。
+noRecordsMessage	a message to display when no records are found, can refer to a localization string.
+当没有找到记录时显示的消息可以引用本地化字符串。
+recordsPerPage	 records to display per page, use 0 for no pages. Default: 0
+记录显示每页，使用0为无页面。 默认值：0
+toolbar	    reference to a Toolbar Widget configuration file, or an array with configuration (see below).
+引用工具栏小部件配置文件或具有配置的数组（见下文）。
+
+showSorting	        displays the sorting link on each column. Default: true
+显示每列上的排序链接。 默认值：true
+defaultSort	        sets a default sorting column and direction when user preference is not defined. Supports a string or an array with keys column and direction.
+在未定义用户首选项时设置默认排序列和方向。 支持带有列和方向的字符串或数组。
+showCheckboxes	 displays checkboxes next to each record. Default: false.
+显示每个记录旁边的复选框。 默认值：false。
+showSetup	displays the list column set up button. Default: false.
+显示列表列设置按钮。 默认值：false。
+showTree	displays a tree hierarchy for parent/child records. Default: false.
+显示父/子记录的树层次结构。 默认值：false。
+treeExpanded	if tree nodes should be expanded by default. Default: false.
+如果树节点应该默认扩展。 默认值：false。
+customViewPath	specify a custom view path to override partials used by the list, optional.
+指定自定义视图路径以覆盖列表使用的部分，可选。
+
+Adding a toolbar
+添加工具栏
+
+To include a toolbar with the list, add the following configuration to the list configuration YAML file:
+要包含列表的工具栏，请将以下配置添加到列表配置YAML文件中：
+
+toolbar:
+    buttons: list_toolbar
+    search:
+        prompt: Find records
+
+The toolbar configuration allows:
+工具栏配置允许：
+
+Option	     Description
+
+buttons     	a reference to a controller partial file with the toolbar buttons. Eg: _list_toolbar.htm
+使用工具栏按钮引用控制器部分文件。 例如：_list_toolbar.htm
+
+search	reference to a Search Widget configuration file, or an array with configuration.
+引用搜索小组件配置文件或具有配置的数组。
+
+The search configuration supports the following options:
+搜索配置支持以下选项：
+
+Option	         Description
+prompt	         a placeholder to display when there is no active search, can refer to a localization string.
+当没有活动搜索时显示的占位符可以引用本地化字符串。
+mode	           defines the search strategy to either contain all words, any word or exact phrase. Supported options: all, any, exact. Default: all.
+定义搜索策略以包含所有单词，任何单词或确切短语。 支持的选项：all，any，exact。 默认：全部。
+scope	      specifies a query scope method defined in the list model to apply to the search query, the first argument will contain the search term.
+指定在列表模型中定义的要应用于搜索查询的查询范围方法，第一个参数将包含搜索项。
+
+The toolbar buttons partial referred above should contain the toolbar control definition with some buttons. The partial could also contain a scoreboard control with charts. Example of a toolbar partial with the New Post button referring to the create action provided by the form behavior:
+上面部分引用的工具栏按钮应包含具有某些按钮的工具栏控件定义。 部分还可以包含带有图表的记分牌控件。 具有New Post按钮的工具栏部分的示例引用由表单行为提供的创建操作：
+
+<div data-control="toolbar">
+    <a
+        href="<?= Backend::url('acme/blog/posts/create') ?>"
+        class="btn btn-primary oc-icon-plus">New Post</a>
+</div>
+
+Filtering the list
+过滤列表
+
+To filter a list by user defined input, add the following list configuration to the YAML file:
+要按用户定义的输入过滤列表，请将以下列表配置添加到YAML文件中：
+
+filter: config_filter.yaml
+The filter option should make reference to a filter configuration file path or supply an array with the configuration.
+过滤器选项应该引用过滤器配置文件路径或提供具有配置的数组。
+
+Defining list columns
+定义列表列
+
+List columns are defined with the YAML file. The column configuration is used by the list behavior for creating the record table and displaying model columns in the table cells. The file is placed to a subdirectory of the models directory of a plugin. The subdirectory name matches the model class name written in lowercase. The file name doesn't matter, but the columns.yaml and list_columns.yaml are common names. Example list columns file location:
+列表列用YAML文件定义。 列配置由列表行为用于创建记录表，并在表单元格中显示模型列。 该文件被放置到插件的models目录的子目录中。 子目录名称与模型类名称以小写字母表示。 文件名无关紧要，但columns.yaml和list_columns.yaml是常用名称。 示例列表列文件位置：
+
+plugins/
+  acme/
+    blog/
+      models/                  <=== Plugin models directory
+        post/                  <=== Model configuration directory
+          list_columns.yaml    <=== Model list columns config file
+        Post.php               <=== model class
+
+The next example shows the typical contents of a list column definitions file.
+
+# ===================================
+#  List Column Definitions
+# ===================================
+
+columns:
+    name: Name
+    email: Email
+
+Column options
+列选项
+
+For each column can specify these options (where applicable):
+对于每一列可以指定这些选项（如适用）：
+
+Option	     Description
+label	      a name when displaying the list column to the user.
+在向用户显示列表列时的名称。
+type	       defines how this column should be rendered (see Column types below).
+定义如何呈现此列（请参阅下面的列类型）。
+default	    specifies the default value for the column if value is empty.
+如果值为空，则指定列的默认值。
+searchable	 include this column in the list search results. Default: false.
+在列表搜索结果中包含此列。 默认值：false。
+invisible	specifies if this column is hidden by default. Default: false.
+指定此列是否默认隐藏。 默认值：false。
+sortable	specifies if this column can be sorted. Default: true.
+指定是否可以排序此列。 默认值：true。
+clickable	if set to false, disables the default click behavior when the column is clicked. Default: true.
+如果设置为false，则在单击列时禁用默认点击行为。 默认值：true。
+select	defines a custom SQL select statement to use for the value.
+定义用于该值的自定义SQL select语句。
+valueFrom	defines a model attribute to use for the value.
+定义要用于该值的模型属性。
+relation	defines a model relationship column.
+定义模型关系列。
+cssClass	assigns a CSS class to the column container.
+将一个CSS类分配给列容器。
+width	sets the column width, can be specified in percents (10%) or pixels (50px). There could be a single column without width specified, it will be stretched to take the available space.
+设置列宽，可以以百分比（10％）或像素（50px）指定。 可以有一个没有指定宽度的单列，它将被拉伸以占用可用空间。
+
+Available column types
+可用列类型
+
+There are various column types that can be used for the type setting, these control how the list column is displayed. In addition to the native column types specified below, you may also define custom column types.
+有各种列类型可以用于类型设置，这些控件如何显示列表列。 除了下面指定的本机列类型之外，还可以定义自定义列类型。
+
+Text
+Number
+Switch
+Date & Time
+Date
+Time
+Time since
+Time tense
+Select
+Relation
+Partial
+Text
+
+text - displays a text column, aligned left
+
+full_name:
+    label: Full Name
+    type: text
+Number
+
+number - displays a number column, aligned right
+
+age:
+    label: Age
+    type: number
+Switch
+
+switch - displays a on or off state for boolean columns.
+
+enabled:
+    label: Enabled
+    type: switch
+Date & Time
+
+datetime - displays the column value as a formatted date and time. The next example displays dates as Thu, Dec 25, 1975 2:15 PM.
+
+created_at:
+    label: Date
+    type: datetime
+You can also specify a custom date format, for example Thursday 25th of December 1975 02:15:16 PM:
+
+created_at:
+    label: Date
+    type: datetime
+    format: l jS \of F Y h:i:s A
+Date
+
+date - displays the column value as date format M j, Y
+
+created_at:
+    label: Date
+    type: date
+Time
+
+time - displays the column value as time format g:i A
+
+created_at:
+    label: Date
+    type: time
+Time since
+
+timesince - displays a human readable time difference from the value to the current time. Eg: 10 minutes ago
+
+created_at:
+    label: Date
+    type: timesince
+Time tense
+
+timetense - displays 24-hour time and the day using the grammatical tense of the current date. Eg: Today at 12:49, Yesterday at 4:00 or 18 Sep 2015 at 14:33.
+
+created_at:
+    label: Date
+    type: timetense
+Select
+
+select - allows to create a column using a custom select statement. Any valid SQL SELECT statement works here.
+
+full_name:
+    label: Full Name
+    select: concat(first_name, ' ', last_name)
+Relation
+
+relation - allows to display related columns, you can provide a relationship option. The value of this option has to be the name of the Active Record relationship on your model. In the next example the name value will be translated to the name attribute found in the related model (eg: $model->name).
+
+group:
+    label: Group
+    relation: groups
+    select: name
+If the relationship definition uses the count argument, you can display the number of related records using the valueFrom and default options.
+
+users_count:
+    label: Users
+    relation: users_count
+    valueFrom: count
+    default: 0
+Partial
+
+partial - renders a partial, the path value can refer to a partial view file otherwise the column name is used as the partial name. Inside the partial these variables are available: $value is the default cell value, $record is the model used for the cell and $column is the configured class object Backend\Classes\ListColumn.
+
+content:
+    type: partial
+    path: ~/plugins/acme/blog/models/comments/_content_column.htm
+Displaying the list
+
+Usually lists are displayed in the index view file. Since lists include the toolbar, the view file will consist solely of the single listRender method call.
+
+<?= $this->listRender() ?>
+Multiple list definitions
+
+The list behavior can support mulitple lists in the same controller using named definitions. The $listConfig property can be defined as an array where the key is a definition name and the value is the configuration file.
+
+public $listConfig = [
+    'templates' => 'config_templates_list.yaml',
+    'layouts' => 'config_layouts_list.yaml'
+];
+Each definition can then be displayed by passing the definition name as the first argument when calling the listRender method:
+
+<?= $this->listRender('templates') ?>
+Using list filters
+
+Lists can be filtered by adding a filter definition to the list configuration. Similarly filters are driven by their own configuration file that contain filter scopes, each scope is an aspect by which the list can be filtered. The next example shows a typical contents of the filter definition file.
+
+# ===================================
+# Filter Scope Definitions
+# ===================================
+
+scopes:
+
+    category:
+        label: Category
+        modelClass: Acme\Blog\Models\Category
+        conditions: category_id in (:filtered)
+        nameFrom: name
+
+    status:
+        label: Status
+        type: group
+        conditions: status in (:filtered)
+        options:
+            pending: Pending
+            active: Active
+            closed: Closed
+
+    published:
+        label: Hide published
+        type: checkbox
+        conditions: is_published <> true
+
+    approved:
+        label: Approved
+        type: switch
+        conditions:
+            - is_approved <> true
+            - is_approved = true
+
+    created_at:
+        label: Date
+        type: date
+        conditions: created_at >= ':filtered'
+
+    published_at:
+        label: Date
+        type: daterange
+        conditions: created_at >= ':after' AND created_at <= ':before'
+Scope options
+
+For each scope you can specify these options (where applicable):
+
+Option	Description
+label	a name when displaying the filter scope to the user.
+type	defines how this scope should be rendered (see Scope types below). Default: group.
+conditions	specifies a raw where query statement to apply to the list model query, the :filtered parameter represents the filtered value(s).
+scope	specifies a query scope method defined in the list model to apply to the list query, the first argument will contain the filtered value(s).
+options	options to use if filtering by multiple items, this option can specify an array or a method name in the modelClass model.
+nameFrom	if filtering by multiple items, the attribute to display for the name, taken from all records of the modelClass model.
+Available scope types
+
+These types can be used to determine how the filter scope should be displayed.
+
+Type	Description
+group	filters the list by a group of items, usually by a related model and requires a nameFrom or options definition. Eg: Status name as open, closed, etc.
+checkbox	used as a binary checkbox to apply a predefined condition or query to the list, either on or off.
+switch	used as a switch to toggle between two predefined conditions or queries to the list, either indeterminate, on or off.
+date	displays a date picker for a single date to be selected.
+daterange	displays a date picker for two dates to be selected as a date range. The conditions parameters are passed as :before and :after.
+Extending list behavior
+
+Sometimes you may wish to modify the default list behavior and there are several ways you can do this.
+
+Overriding controller action
+Overriding views
+Extending column definitions
+Extending the model query
+Custom column types
+Overriding controller action
+
+You can use your own logic for the index action method in the controller, then optionally call the List behavior index parent method.
+
+public function index()
+{
+    //
+    // Do any custom code here
+    //
+
+    // Call the ListController behavior index() method
+    $this->asExtension('ListController')->index();
+}
+Overriding views
+
+The ListController behavior has a main container view that you may override by creating a special file named _list_container.htm in your controller directory. The following example will add a sidebar to the list:
+
+<?php if ($toolbar): ?>
+    <?= $toolbar->render() ?>
+<?php endif ?>
+
+<?php if ($filter): ?>
+    <?= $filter->render() ?>
+<?php endif ?>
+
+<div class="row row-flush">
+    <div class="col-sm-3">
+        [Insert sidebar here]
+    </div>
+    <div class="col-sm-9 list-with-sidebar">
+        <?= $list->render() ?>
+    </div>
+</div>
+The behavior will invoke a Lists widget that also contains numerous views that you may override. This is possible by specifying a customViewPath option as described in the list configuration options. The widget will look in this path for a view first, then fall back to the default location.
+
+# Custom view path
+customViewPath: $/acme/blog/controllers/reviews/list
+Note: It is a good idea to use a sub-directory, for example list, to avoid conflicts.
+For example, to modify the list body row markup, create a file called list/_list_body_row.htm in your controller directory.
+
+<tr>
+    <?php foreach ($columns as $key => $column): ?>
+        <td><?= $this->getColumnValue($record, $column) ?></td>
+    <?php endforeach ?>
+</tr>
+Extending column definitions
+
+You can extend the columns of another controller from outside by calling the extendListColumns static method on the controller class. This method can take two arguments, $list will represent the Lists widget object and $model represents the model used by the list. Take this controller for example:
+
+class Categories extends \Backend\Classes\Controller
+{
+    public $implement = ['Backend.Behaviors.ListController'];
+
+    public $listConfig = 'list_config.yaml';
+}
+Using the extendListColumns method you can add extra columns to any list rendered by this controller. It is a good idea to check the $model is of the correct type. Here is an example:
+
+    Categories::extendListColumns(function($list, $model) {
+
+        if (!$model instanceof MyModel)
+            return;
+
+        $list->addColumns([
+            'my_column' => [
+                'label' => 'My Column'
+            ]
+        ]);
+
+    });
+You can also extend the list columns internally by overriding the listExtendColumns method inside the controller class.
+
+class Categories extends \Backend\Classes\Controller
+{
+    [...]
+
+    public function listExtendColumns($list)
+    {
+        $list->addColumns([...]);
+    }
+}
+The following methods are available on the $list object.
+
+Method	Description
+addColumns	adds new columns to the list
+removeColumn	removes a column from the list
+Each method takes an array of columns similar to the list column configuration.
+
+Extending the model query
+
+The lookup query for the list database model can be extended by overriding the listExtendQuery method inside the controller class. This example will ensure that soft deleted records are included in the list data, by applying the withTrashed scope to the query:
+
+public function listExtendQuery($query)
+{
+    $query->withTrashed();
+}
+The list filter model query can also be extended by overriding the listFilterExtendQuery method:
+
+public function listFilterExtendQuery($query, $scope)
+{
+    if ($scope->scopeName == 'status') {
+        $query->where('status', '<>', 'all');
+    }
+}
+Extending the records collection
+
+The collection of records used by the list can be extended by overriding the listExtendRecords method inside the controller class. This example uses the sort method on the record collection to change the sort order of the records.
+
+public function listExtendRecords($records)
+{
+    return $records->sort(function ($a, $b) {
+        return $a->computedVal() > $b->computedVal();
+    });
+}
+Custom column types
+
+Custom list column types can be registered in the back-end with the registerListColumnTypes method of the Plugin registration class. The method should return an array where the key is the type name and the value is a callable function. The callable function receives three arguments, the native $value, the $column definition object and the model $record object.
+
+public function registerListColumnTypes()
+{
+    return [
+        // A local method, i.e $this->evalUppercaseListColumn()
+        'uppercase' => [$this, 'evalUppercaseListColumn'],
+
+        // Using an inline closure
+        'loveit' => function($value) { return 'I love '. $value; }
+    ];
+}
+
+public function evalUppercaseListColumn($value, $column, $record)
+{
+    return strtoupper($value);
+}
+Using the custom list column type is as simple as calling it by name using the type option.
+
+# ===================================
+#  List Column Definitions
+# ===================================
+
+columns:
+    secret_code:
+        label: Secret code
+        type: uppercase

@@ -1,0 +1,1033 @@
+Introduction
+Configuring the form behavior
+Create page
+Update page
+Preview page
+Defining form fields
+Tab options
+Field options
+Available field types
+Form widgets
+Form views
+Create view
+Update view
+Preview view
+Applying conditions to fields
+Input preset converter
+Trigger events
+Field dependencies
+Preventing a field from being submitted
+Extending form behavior
+Overriding controller action
+Extending form model query
+Extending form fields
+Filtering form fields
+Validating form fields
+Introduction
+
+Form behavior is a controller modifier used for easily adding form functionality to a back-end page. The behavior provides three pages called Create, Update and Preview. The Preview page is a read-only version of the Update page. When you use the form behavior you don't need to define the create, update and preview actions in the controller - the behavior does it for you. However you should provide the corresponding view files.
+表单行为是一个控制器修饰符，用于轻松地将表单功能添加到后端页面。 该行为提供了三个名为Create，Update和Preview的页面。 “预览”页面是“更新”页面的只读版本。 当您使用表单行为时，您不需要在控制器中定义创建，更新和预览操作 - 行为为您做。 但是您应该提供相应的视图文件。
+
+
+Form behavior depends on form field definitions and a model class. In order to use the form behavior you should add it to the $implement property of the controller class. Also, the $formConfig class property should be defined and its value should refer to the YAML file used for configuring the behavior options.
+表单行为取决于表单字段定义和模型类。 为了使用表单行为，您应该将其添加到控制器类的$ implement属性。 此外，应该定义$ formConfig类属性，其值应该引用用于配置行为选项的YAML文件。
+
+namespace Acme\Blog\Controllers;
+
+class Categories extends \Backend\Classes\Controller
+{
+    public $implement = ['Backend.Behaviors.FormController'];
+
+    public $formConfig = 'form_config.yaml';
+}
+
+Note: Very often the form and list behavior are used together in a same controller.
+注意：表单和列表行为通常在同一控制器中一起使用。
+
+
+Configuring the form behavior
+配置表单行为
+
+The configuration file referred in the $formConfig property is defined in YAML format. The file should be placed into the controller's views directory. Below is an example of a typical form behavior configuration file:
+$ formConfig属性中引用的配置文件以YAML格式定义。 该文件应放置在控制器的视图目录中。 以下是典型的表单行为配置文件的示例：
+
+# ===================================
+#  Form Behavior Config
+# ===================================
+
+name: Blog Category
+form: $/acme/blog/models/post/fields.yaml
+modelClass: Acme\Blog\Post
+
+create:
+    title: New Blog Post
+
+update:
+    title: Edit Blog Post
+
+preview:
+    title: View Blog Post
+
+The following fields are required in the form configuration file:
+表单配置文件中需要以下字段：
+
+Field	Description
+name	   the name of the object being managed by this form.
+由该表单管理的对象的名称。
+form	   a configuration array or reference to a form field definition file, see form fields.
+配置数组或表单域定义文件的引用，请参阅表单字段。
+modelClass	a model class name, the form data is loaded and saved against this model.
+模型类名称，根据此模型加载和保存表单数据。
+
+The configuration options listed below are optional. Define them if you want the form behavior to support the Create, Update or Preview pages.
+下面列出的配置选项是可选的。 如果您希望表单行为支持创建，更新或预览页面，请定义它们。
+
+Option	             Description
+defaultRedirect	    used as a fallback redirection page when no specific redirect page is defined.
+在没有定义特定重定向页面时用作备用重定向页面。
+create	             a configuration array or reference to a config file for the Create page.
+一个配置数组或对“创建”页面的配置文件的引用。
+update	             a configuration array or reference to a config file for the Update page.
+配置数组或对Update页面的配置文件的引用。
+preview	        a configuration array or reference to a config file for the Preview page.
+配置数组或对“预览”页面的配置文件的引用。
+
+Create page
+
+To support the Create page add the following configuration to the YAML file:
+要支持“创建”页面，请将以下配置添加到YAML文件中：
+
+create:
+    title: New Blog Post
+    redirect: acme/blog/posts/update/:id
+    redirectClose: acme/blog/posts
+    flashSave: Post has been created!
+
+The following configuration options are supported for the Create page:
+
+Option	     Description
+title	          a page title, can refer to a localization string.
+页面标题可以引用本地化字符串。
+redirect	       redirection page when record is saved.
+保存记录时的重定向页面。
+redirectClose	  redirection page when record is saved and the close post variable is sent with the request.
+保存记录时的重定向页面以及请求发送关闭post变量。
+
+flashSave	      flash message to display when record is saved, can refer to a localization string.
+当记录保存时，可以显示间谍信息，可以参考本地化字符串。
+form	       overrides the default form fields definitions for the create page only.
+覆盖创建页面的默认表单域定义。
+
+
+Update page
+
+To support the Update page add the following configuration to the YAML file:
+
+update:
+    title: Edit Blog Post
+    redirect: acme/blog/posts
+    flashSave: Post updated successfully!
+    flashDelete: Post has been deleted.
+The following configuration options are supported for the Update page:
+
+Option	         Description
+title	          a page title, can refer to a localization string.
+redirect	       redirection page when record is saved.
+redirectClose	      redirection page when record is saved and close post variable is sent with the request.
+flashSave	          flash message to display when record is saved, can refer to a localization string.
+flashDelete	            flash message to display when record is deleted, can refer to a localization string.
+form	           overrides the default form fields definitions for the update page only.
+
+Preview page
+
+To support the Preview page add the following configuration to the YAML file:
+
+preview:
+    title: View Blog Post
+
+The following configuration options are supported for the Preview page:
+
+Option	     Description
+title	      a page title, can refer to a localization string.
+form	       overrides the default form fields definitions for the preview page only.
+
+Defining form fields
+定义表单域
+
+Form fields are defined with the YAML file. The form fields configuration is used by the form behavior for creating the form controls and binding them to the model fields. The file is placed to a subdirectory of the models directory of a plugin. The subdirectory name matches the model class name written in lowercase. The file name doesn't matter, but fields.yaml and form_fields.yaml are common names. Example form fields file location:
+表单域用YAML文件定义。 表单字段配置由表单行为用于创建表单控件并将其绑定到模型字段。 该文件被放置到插件的models目录的子目录中。 子目录名称与模型类名称以小写字母表示。 文件名无关紧要，但fields.yaml和form_fields.yaml是常用名称。 示例表单字段文件位置：
+
+plugins/
+  acme/
+    blog/
+      models/            <=== Plugin models directory
+        post/            <=== Model configuration directory
+          fields.yaml    <=== Model form fields config file
+        Post.php         <=== model class
+
+Fields can be placed in three areas, the outside area, primary tabs or secondary tabs. The next example shows the typical contents of a form fields definition file.
+字段可以放置在三个区域，外部区域，主选项卡或辅助选项卡。 下一个示例显示了表单域定义文件的典型内容。
+
+# ===================================
+#  Form Field Definitions
+# ===================================
+
+fields:
+    blog_title:
+        label: Blog Title
+        description: The title for this blog
+
+    published_at:
+        label: Published date
+        description: When this blog post was published
+        type: datepicker
+
+    [...]
+
+tabs:
+    fields:
+        [...]
+
+secondaryTabs:
+    fields:
+        [...]
+
+Fields from related models can be rendered with the Relation Widget or the Relation Manager. The exception is a OneToOne or morphOne related field, which must be defined as relation[field] and then can be specified as any other field of the model:
+可以使用Relation Widget或Relation Manager呈现相关模型的字段。 一个例外是OneToOne或morphOne相关的字段，它必须被定义为relation [field]，然后可以被指定为模型的任何其他字段：
+
+    user_name:
+        label: User Name
+        description: The name of the user
+    avatar[name]:
+        label: Avatar
+        description: will be saved in the Avatar table
+    published_at:
+        label: Published date
+        description: When this blog post was published
+        type: datepicker
+
+    [...]
+
+Tab options
+标签选项
+
+For each tab definition, namely tabs and secondaryTabs, you can specify these options:
+对于每个选项卡定义，即选项卡和secondaryTabs，您可以指定以下选项：
+
+Option	         Description
+stretch	            specifies if this tab stretches to fit the parent height.
+defaultTab	         the default tab to assign fields to. Default: Misc.
+cssClass	           assigns a CSS class to the tab container.
+
+Field options
+
+For each field you can specify these options (where applicable):
+对于每个选项卡定义，即选项卡和secondaryTabs，您可以指定以下选项：...
+
+Option	         Description
+label	              a name when displaying the form field to the user.
+在向用户显示表单字段时的名称。
+type	               defines how this field should be rendered (see Available fields types below). Default: text.
+定义如何呈现该字段（请参阅下面的可用字段类型）。 默认：文本。
+span	               aligns the form field to one side. Options: auto, left, right, full. Default: auto.
+将表单域对齐到一边。 选项：自动，左，右，全。 默认值：auto。
+
+size	               specifies a field size for fields that use it, for example, the textarea field. Options: tiny, small, large, huge, giant.
+指定使用它的字段的字段大小，例如textarea字段。 选择：小，小，大，巨大，巨人。
+placeholder	        if the field supports a placeholder value.
+如果该字段支持占位符值。
+comment	    places a descriptive comment below the field.
+在该字段下方添加描述性注释。
+commentAbove	places a comment above the field.
+在字段上方发表评论。
+commentHtml	allow HTML markup inside the comment. Options: true, false.
+在评论内允许HTML标记。 选项：true，false。
+default	specifies the default value for the field.
+指定字段的默认值。
+defaultFrom	takes the default value from the value of another field.
+从另一个字段的值获取默认值。
+
+tab	        assigns the field to a tab.
+将字段分配给选项卡。
+cssClass	assigns a CSS class to the field container.
+将一个CSS类分配给字段容器。
+readOnly	prevents the field from being modified. Options: true, false.
+防止字段被修改。 选项：true，false。
+disabled	prevents the field from being modified and excludes it from the saved data. Options: true, false.
+防止字段被修改，并将其从保存的数据中排除。 选项：true，false。
+
+hidden	hides the field from the view and excludes it from the saved data. Options: true, false.
+从视图中隐藏该字段，并将其从保存的数据中排除。 选项：true，false。
+stretch	    specifies if this field stretches to fit the parent height.
+指定此字段是否适合父级高度。
+context	  specifies what context should be used when displaying the field. Context can also be passed by using an @ symbol in the field name, for example, name@update.
+指定显示字段时应使用哪些上下文。 也可以通过在字段名称中使用@符号来传递上下文，例如name @ update。
+
+dependsOn	an array of other field names this field depends on, when the other fields are modified, this field will update.
+此字段依赖于其他字段名称的数组，当修改其他字段时，此字段将更新。
+
+trigger	specify conditions for this field using trigger events.
+使用触发事件指定此字段的条件。
+preset	allows the field value to be initially set by the value of another field, converted using the input preset converter.
+允许通过使用输入预置转换器转换的另一个字段的值来初始设置字段值。
+
+required	places a red asterisk next to the field label to indicate it is required (make sure to setup validation on the model as this is not enforced by the form controller).
+在字段标签旁边放置一个红色的星号表示它是必需的（确保在模型上设置验证，因为这不是由表单控制器执行的）。
+
+attributes	specify custom HTML attributes to add to the form field element.
+指定要添加到表单字段元素的自定义HTML属性。
+containerAttributes	specify custom HTML attributes to add to the form field container.
+指定要添加到表单字段容器的自定义HTML属性。
+
+Available field types
+可用字段类型
+
+There are various native field types that can be used for the type setting. For more advanced form fields, a form widget can be used instead.
+有各种本机字段类型可用于类型设置。 对于更高级的表单字段，可以使用表单窗口小部件。
+
+Text
+Number
+Password
+Textarea
+Dropdown
+Radio List
+Balloon Selector
+Checkbox
+Checkbox List
+Switch
+Section
+Partial
+Hint
+Widget
+
+Text
+
+text - renders a single line text box. This is the default type used if none is specified.
+呈现单行文本框。 这是指定的默认类型。
+blog_title:
+    label: Blog Title
+    type: text
+
+Number
+
+number - renders a single line text box that takes numbers only.
+结束一个单行文本框，只需要数字。
+your_age:
+    label: Your Age
+    type: number
+
+Password
+
+password - renders a single line password field.
+呈现单行密码字段。
+user_password:
+    label: Password
+    type: password
+
+Textarea
+
+textarea - renders a multiline text box. A size can also be specified with possible values: tiny, small, large, huge, giant.
+呈现多行文本框。 尺寸也可以用可能的值来指定：小，小，大，巨，巨。
+blog_contents:
+    label: Contents
+    type: textarea
+    size: large
+
+Dropdown
+
+dropdown - renders a dropdown with specified options. There are 4 ways to provide the drop-down options. The first method defines options directly in the YAML file:
+使用指定的选项呈现下拉列表。 提供下拉选项有四种方式。 第一种方法直接在YAML文件中定义选项：
+
+status_type:
+    label: Blog Post Status
+    type: dropdown
+    options:
+        draft: Draft
+        published: Published
+        archived: Archived
+
+The second method defines options with a method declared in the model's class. If the options element is omitted, the framework expects a method with the name get*FieldName*Options to be defined in the model. Using the example above, the model should have the getStatusTypeOptions method. The first argument of this method is the current value of this field and the second is the current data object for the entire form. This method should return an array of options in the format key => label.
+第二种方法使用模型类中声明的方法定义选项。 如果省略options元素，则框架期望在模型中定义名为get * FieldName * Options的方法。 使用上面的例子，模型应该有getStatusTypeOptions方法。 该方法的第一个参数是此字段的当前值，第二个参数是整个表单的当前数据对象。 此方法应返回格式为“=>”的格式的数组。
+
+status_type:
+    label: Blog Post Status
+    type: dropdown
+
+Supplying the dropdown options in the model class:
+在模型类中提供下拉列表选项：
+
+public function getStatusTypeOptions($value, $formData)
+{
+    return ['all' => 'All', ...];
+}
+
+The third global method getDropdownOptions can also be defined in the model, this will be used for all dropdown field types for the model. The first argument of this method is the field name, the second is the currect value of the field, and the third is the current data object for the entire form. It should return an array of options in the format key => label.
+第三个全局方法getDropdownOptions也可以在模型中定义，这将用于模型的所有下拉字段类型。 该方法的第一个参数是字段名称，第二个参数是字段的currect值，第三个是整个表单的当前数据对象。 它应该返回一个格式的数组，格式为key => label。
+
+public function getDropdownOptions($fieldName, $value, $formData)
+{
+    if ($fieldName == 'status') {
+        return ['all' => 'All', ...];
+    }
+    else {
+        return ['' => '-- none --'];
+    }
+}
+
+The fourth method uses a specific method declared in the model's class. In the next example the listStatuses method should be defined in the model class. This method receives all the same arguments as the getDropdownOptions method, and should return an array of options in the format key => label.
+第四种方法使用在模型类中声明的特定方法。 在下一个示例中，listStatuses方法应该在模型类中定义。 此方法接收与getDropdownOptions方法相同的所有参数，并应返回格式为> => label的选项数组。
+
+status:
+    label: Blog Post Status
+    type: dropdown
+    options: listStatuses
+
+Supplying the dropdown options to the model class:
+向模型类提供下拉列表选项：
+
+public function listStatuses($fieldName, $value, $formData)
+{
+    return ['published' => 'Published', ...];
+}
+
+To define the behavior when there is no selection, you may specify an emptyOption value to include an empty option that can be reselected.
+要在没有选择时定义行为，可以指定一个emptyOption值，以包含一个可以重新选择的空选项。
+
+status:
+    label: Blog Post Status
+    type: dropdown
+    emptyOption: -- no status --
+Alternatively you may use the placeholder option to use a "one-way" empty option that cannot be reselected.
+
+status:
+    label: Blog Post Status
+    type: dropdown
+    placeholder: -- select a status --
+
+By default the dropdown has a searching feature, allowing quick selection of a value. This can be disabled by setting the showSearch option to false.
+
+status:
+    label: Blog Post Status
+    type: dropdown
+    showSearch: false
+Radio List
+
+radio - renders a list of radio options, where only one item can be selected at a time.
+
+security_level:
+    label: Access Level
+    type: radio
+    options:
+        all: All
+        registered: Registered only
+        guests: Guests only
+Radio lists can also support a secondary description.
+
+security_level:
+    label: Access Level
+    type: radio
+    options:
+        all: [All, Guests and customers will be able to access this page.]
+        registered: [Registered only, Only logged in member will be able to access this page.]
+        guests: [Guests only, Only guest users will be able to access this page.]
+Radio lists support three ways of defining the options, exactly like the dropdown field type. For radio lists the method could return either the simple array: key => value or an array of arrays for providing the descriptions: key => [label, description]
+
+Balloon Selector
+
+balloon-selector - renders a list, where only one item can be selected at a time.
+
+gender:
+    label: Gender
+    type: balloon-selector
+    options:
+        female: Female
+        male: Male
+Balloon selectors support three ways of defining the options, exactly like the dropdown field type.
+
+Checkbox
+
+checkbox - renders a single checkbox.
+
+show_content:
+    label: Display content
+    type: checkbox
+    default: true
+Checkbox List
+
+checkboxlist - renders a list of checkboxes.
+
+permissions:
+    label: Permissions
+    type: checkboxlist
+    options:
+        open_account: Open account
+        close_account: Close account
+        modify_account: Modify account
+Checkbox lists support three ways of defining the options, exactly like the dropdown field type and also support secondary descriptions, found in the radio field type.
+
+Switch
+
+switch - renders a switchbox.
+
+show_content:
+    label: Display content
+    type: switch
+    comment: Flick this switch to display content
+Section
+
+section - renders a section heading and subheading. The label and comment values are optional and contain the content for the heading and subheading.
+
+user_details_section:
+    label: User details
+    type: section
+    comment: This section contains details about the user.
+Partial
+
+partial - renders a partial, the path value can refer to a partial view file otherwise the field name is used as the partial name. Inside the partial these variables are available: $value is the default field value, $model is the model used for the field and $field is the configured class object Backend\Classes\FormField.
+
+content:
+    type: partial
+    path: $/acme/blog/models/comments/_content_field.htm
+Hint
+
+hint - identical to a partial field but renders inside a hint container that can be hidden by the user.
+
+content:
+    type: hint
+    path: content_field
+Widget
+
+widget - renders a custom form widget, the type field can refer directly to the class name of the widget or the registered alias name.
+窗口小部件 - 呈现自定义窗体小部件，类型字段可以直接引用到窗口小部件的类名称或注册的别名
+blog_content:
+    type: Backend\FormWidgets\RichEditor
+    size: huge
+
+Form widgets
+表单小部件
+
+There are various form widgets included as standard, although it is common for plugins to provide their own custom form widgets. You can read more on the Form Widgets article.
+标准配置有各种形式的小部件，尽管插件通常提供自己的自定义窗体小部件。 您可以在“窗体小部件”文章中阅读更多内容。
+
+Code editor
+Color picker
+Date picker
+File upload
+Record finder
+Media finder
+Relation
+Repeater
+Rich editor / WYSIWYG
+Markdown editor
+Tag list
+Code editor
+
+codeeditor - renders a plaintext editor for formatted code or markup. Note the options may be inherited by the code editor preferences defined for the Administrator in the back-end.
+codeeditor - 呈现格式化代码或标记的明文编辑器。 请注意，选项可能会由后端的管理员定义的代码编辑器首选项继承。
+
+css_content:
+    type: codeeditor
+    size: huge
+    language: html
+Option	Description
+language	code language, for example, php, css, js, html. Default: php.
+showGutter	shows a gutter with line numbers. Default: true.
+wrapWords	breaks long lines on to a new line. Default true.
+fontSize	the text font size. Default: 12.
+Color picker
+
+colorpicker - renders controls to select a hexadecimal color value.
+
+color:
+    label: Background
+    type: colorpicker
+Option	Description
+availableColors	list of available colors.
+Date picker
+
+datepicker - renders a text field used for selecting date and times.
+
+published_at:
+    label: Published
+    type: datepicker
+    mode: date
+Option	Description
+mode	the expected result, either date, datetime or time. Default: datetime.
+format	provide an explicit date display format. Eg: Y-m-d
+minDate	the minimum/earliest date that can be selected. Default: 2000-01-01.
+maxDate	the maximum/latest date that can be selected. Default: 2020-12-31.
+File upload
+
+fileupload - renders a file uploader for images or regular files. The field name must use an attachOne or attachMany relation.
+
+avatar:
+    label: Avatar
+    type: fileupload
+    mode: image
+    imageHeight: 260
+    imageWidth: 260
+    thumbOptions:
+        mode: crop
+        offset:
+            - 0
+            - 0
+        quality: 90
+        sharpen: 0
+        extension: auto
+Option	Description
+mode	the expected file type, either file or image. Default: image.
+imageWidth	if using image type, the image will be resized to this width, optional.
+imageHeight	if using image type, the image will be resized to this height, optional.
+fileTypes	file extensions that are accepted by the uploader, optional. Eg: zip,txt
+mimeTypes	MIME types that are accepted by the uploader, either as file extension or fully qualified name, optional. Eg: bin,txt
+useCaption	allows a title and description to be set for the file. Default: true
+prompt	text to display for the upload button, applies to files only, optional.
+thumbOptions	options to pass to the thumbnail generating method for the file
+Record finder
+
+recordfinder - renders a field with details of a related record. Expanding the field displays a popup list to search large amounts of records. Supported by singular relationships only.
+
+user:
+    label: User
+    type: recordfinder
+    list: $/rainlab/user/models/user/columns.yaml
+    prompt: Click the %s button to find a user
+    nameFrom: name
+    descriptionFrom: email
+Option	Description
+nameFrom	the column name to use in the relation used for displaying the name. Default: name.
+descriptionFrom	the column name to use in the relation used for displaying a description. Default: description.
+title	text to display in the title section of the popup.
+prompt	text to display when there is no record selected. The %s character represents the search icon.
+list	a configuration array or reference to a list column definition file, see list columns.
+recordsPerPage	records to display per page, use 0 for no pages. Default: 10
+conditions	specifies a raw where query statement to apply to the list model query.
+scope	specifies a query scope method defined in the related form model to apply to the list query always. The first argument will contain the model that the widget will be attaching its value to, i.e. the parent model.
+searchMode	defines the search strategy to either contain all words, any word or exact phrase. Supported options: all, any, exact. Default: all.
+searchScope	specifies a query scope method defined in the related form model to apply to the search query, the first argument will contain the search term.
+Media finder
+
+mediafinder - renders a field for selecting an item from the media manager library. Expanding the field displays the media manager to locate a file. The resulting selection is a string as the relative path to the file.
+
+background_image:
+    label: Background image
+    type: mediafinder
+    mode: image
+Option	Description
+mode	the expected file type, either file or image. Default: file.
+prompt	text to display when there is no item selected. The %s character represents the media manager icon.
+Relation
+
+relation - renders either a dropdown or checkbox list according to the field relation type. Singular relationships display a dropdown, multiple relationships display a checkbox list. The label used for displaying each relation is sourced by the nameFrom or select definition.
+
+categories:
+    label: Categories
+    type: relation
+    nameFrom: title
+Alternatively, you may populate the label using a custom select statement. Any valid SQL statement works here.
+
+user:
+    label: User
+    type: relation
+    select: concat(first_name, ' ', last_name)
+Option	Description
+nameFrom	a model attribute name used for displaying the relation label. Default: name.
+select	a custom SQL select statement to use for the name.
+descriptionFrom	the column name to use in the relation used for displaying a description (optional). Default: description.
+emptyOption	text to display when there is no available selections.
+Repeater
+
+repeater - renders a repeating set of form fields defined within.
+
+extra_information:
+    type: repeater
+    form:
+        fields:
+            added_at:
+                label: Date added
+                type: datepicker
+            details:
+                label: Details
+                type: textarea
+Option	Description
+form	a reference to form field definition file, see backend form fields. Inline fields can also be used.
+prompt	text to display for the create button. Default: Add new item.
+maxItems	maximum number of items to allow within the repeater.
+Rich editor / WYSIWYG
+
+richeditor - renders a visual editor for rich formatted text, also known as a WYSIWYG editor.
+
+html_content:
+    type: richeditor
+    toolbarButtons: bold|italic
+    size: huge
+Option	Description
+toolbarButtons	which buttons to show on the editor toolbar.
+The available toolbar buttons are:
+
+fullscreen, bold, italic, underline, strikeThrough, subscript, superscript, fontFamily, fontSize, |, color, emoticons, inlineStyle, paragraphStyle, |, paragraphFormat, align, formatOL, formatUL, outdent, indent, quote, insertHR, -, insertLink, insertImage, insertVideo, insertAudio, insertFile, insertTable, undo, redo, clearFormatting, selectAll, html
+Note: | will insert a vertical separator line in the toolbar and - a horizontal one.
+Markdown editor
+
+markdown - renders a basic editor for markdown formatted text.
+
+md_content:
+    type: markdown
+    size: huge
+    mode: split
+Option	Description
+mode	the expected view mode, either tab or split. Default: tab.
+Tag list
+
+taglist - renders a field for inputting a list of tags.
+
+tags:
+    type: taglist
+    separator: space
+A tag list can support three ways of defining the options, exactly like the dropdown field type.
+
+tags:
+    type: taglist
+    options:
+        - Red
+        - Blue
+        - Orange
+You may use the mode called relation where the field name is a many-to-many relationship. This will automatically source and assign tags via the relationship. If custom tags are supported, they will be created before assignment.
+
+tags:
+    type: taglist
+    mode: relation
+Option	Description
+mode	controls how the value is returned, either string, array or relation. Default: string.
+separator	separate tags with the specified character, either comma or space. Default: comma.
+customTags	allows custom tags to be entered manually by the user. Default: true
+options	specifies a method or array for predefined options. Set to true to use model get*Field*Options method. Optional.
+nameFrom	if relation mode is used, a model attribute name for displaying the tag name. Default: name.
+Form views
+
+For each page your form supports Create, Update and Preview you should provide a view file with the corresponding name - create.htm, update.htm and preview.htm.
+
+The form behavior adds two methods to the controller class: formRender and formRenderPreview. These methods render the form controls configured with the YAML file described above.
+
+Create view
+
+The create.htm view represents the Create page that allows users to create new records. A typical Create page contains breadcrumbs, the form itself, and the form buttons. The data-request attribute should refer to the onSave AJAX handler provided by the form behavior. Below is a contents of the typical create.htm form.
+
+<?= Form::open(['class'=>'layout']) ?>
+
+    <div class="layout-row">
+        <?= $this->formRender() ?>
+    </div>
+
+    <div class="form-buttons">
+        <div class="loading-indicator-container">
+            <button
+                type="button"
+                data-request="onSave"
+                data-request-data="close:true"
+                data-hotkey="ctrl+enter, cmd+enter"
+                data-load-indicator="Creating Category..."
+                class="btn btn-default">
+                Create and Close
+            </button>
+            <span class="btn-text">
+                or <a href="<?= Backend::url('acme/blog/categories') ?>">Cancel</a>
+            </span>
+        </div>
+    </div>
+
+<?= Form::close() ?>
+Update view
+
+The update.htm view represents the Update page that allows users to update or delete existing records. A typical Update page contains breadcrumbs, the form itself, and the form buttons. The Update page is very similar to the Create page, but usually has the Delete button. The data-request attribute should refer to the onSave AJAX handler provided by the form behavior. Below is a contents of the typical update.htm form.
+
+<?= Form::open(['class'=>'layout']) ?>
+
+    <div class="layout-row">
+        <?= $this->formRender() ?>
+    </div>
+
+    <div class="form-buttons">
+        <div class="loading-indicator-container">
+            <button
+                type="button"
+                data-request="onSave"
+                data-request-data="close:true"
+                data-hotkey="ctrl+enter, cmd+enter"
+                data-load-indicator="Saving Category..."
+                class="btn btn-default">
+                Save and Close
+            </button>
+            <button
+                type="button"
+                class="oc-icon-trash-o btn-icon danger pull-right"
+                data-request="onDelete"
+                data-load-indicator="Deleting Category..."
+                data-request-confirm="Do you really want to delete this category?">
+            </button>
+            <span class="btn-text">
+                or <a href="<?= Backend::url('acme/blog/categories') ?>">Cancel</a>
+            </span>
+        </div>
+    </div>
+
+<?= Form::close() ?>
+Preview view
+
+The preview.htm view represents the Preview page that allows users to preview existing records in the read-only mode. A typical Preview page contains breadcrumbs and the form itself. Below is a contents of the typical preview.htm form.
+
+<div class="form-preview">
+    <?= $this->formRenderPreview() ?>
+</div>
+Applying conditions to fields
+应用条件到字段
+Sometimes you may want to manipulate the value or appearance of a form field under certain conditions, for example, you may want to hide an input if a checkbox is ticked. There are a few ways you can do this, either by using the trigger API or field dependencies. The input preset converter is primarily used to converting field values. These options are described in more detail below.
+有时您可能希望在特定条件下操作表单域的值或外观，例如，如果勾选复选框，则可能需要隐藏输入。 有几种方法可以通过使用触发器API或字段依赖来执行此操作。 输入预置转换器主要用于转换字段值。 下面更详细地描述这些选项。
+
+Input preset converter
+输入预置转换器
+The input preset converter is defined with the preset form field option and allows you to convert text entered into an element to a URL, slug or file name value in another input element.
+输入预设转换器使用预设表单字段选项进行定义，并允许您将输入到元素的文本转换为另一个输入元素中的URL，slug或文件名称值。
+
+In this example we will automatically fill out the url field value when a user enters text in the title field. If the text Hello world is typed in for the Title, the URL will follow suit with the converted value of /hello-world. This behavior will only occur when the destination field (url) is empty and untouched.
+在这个例子中，当用户在title字段中输入文本时，我们将自动填写url字段值。 如果为“标题”键入文本“Hello world”，则URL将跟随/ hello-world的转换值。 此行为仅在目标字段（url）为空且不变时才会发生。
+
+title:
+    label: Title
+
+url:
+    label: URL
+    preset:
+        field: title
+        type: url
+
+Alternatively, the preset value can also be a string that refers to the field only, the type option will then default to slug.
+或者，预设值也可以是仅引用该字段的字符串，然后类型选项将默认为slug。
+
+slug:
+    label: Slug
+    preset: title
+The following options are available for the preset option:
+以下选项可用于预设选项：
+
+Option	     Description
+field	      defines the other field name to source the value from.
+定义其他字段名称以从中获取值。
+type	       specifies the conversion type. See below for supported values.
+指定转换类型。 参见下面的支持值。
+prefixInput	    optional, prefixes the converted value with the value found in the supplied input element using a CSS selector.
+可选，使用CSS选择器将转换后的值与提供的输入元素中找到的值进行前缀。
+
+Following are the supported types:
+以下是支持的类型：
+
+Type	       Description
+exact	          copies the exact value
+复制确切的值
+slug	          formats the copied value as a slug
+将复制的值格式化为小块
+url	            same as slug but prefixed with a /
+与slug相同，但前缀有/
+camel	      formats the copied value with camelCase
+用camelCase格式化复制的值
+file	       formats the copied value as a file name with whitespace replaced with dashes
+将复制的值格式化为文本名称，将空格替换为破折号
+
+Trigger events
+触发事件
+
+Trigger events are defined with the trigger form field option and is a simple browser based solution that uses JavaScript. It allows you to change elements attributes such as visibility or value, based on another elements' state. Here is a sample definition:
+触发器事件由触发器窗体字段选项定义，是使用JavaScript的基于浏览器的简单解决方案。 它允许您基于另一个元素的状态来更改元素属性，例如可见性或值。 以下是一个示例定义：
+
+is_delayed:
+    label: Send later
+    comment: Place a tick in this box if you want to send this message at a later time.
+    type: checkbox
+
+send_at:
+    label: Send date
+    type: datepicker
+    cssClass: field-indent
+    trigger:
+        action: show
+        field: is_delayed
+        condition: checked
+
+In the above example the send_at form field will only be shown if the is_delayed field is checked. In other words, the field will show (action) if the other form input (field) is checked (condition). The trigger definition specifies these options:
+在上述示例中，只有在选中了is_delayed字段时，才会显示send_at表单域。 换句话说，如果检查另一个窗体输入（字段）（条件），该字段将显示（动作）。 触发器定义指定这些选项：
+
+Option	     Description
+action	     defines the action applied to this field when the condition is met. Supported values: show, hide, enable, disable, empty.
+定义满足条件时应用于此字段的操作。 支持的值：显示，隐藏，启用，禁用，清空。
+field	      defines the other field name that will trigger the action.
+定义将触发操作的其他字段名称。
+condition	  determines the condition the specified field should satisfy for the condition to be considered "true". Supported values: checked, unchecked, value[somevalue].
+确定指定字段对于要被认为是“真”的条件应满足的条件。 支持的值：checked，unchecked，value [somevalue]。
+
+Field dependencies
+字段依赖
+Form fields can depend on others when defining the dependsOn form field option which provides a more robust server side solution. When the defined other fields change, the defining field will update using the AJAX framework. Here is a sample definition:
+在定义dependsOn表单域选项时，表单域可以依赖于其他字段，该选项提供了更强大的服务器端解决方案。 当定义的其他字段更改时，定义字段将使用AJAX框架进行更新。 以下是一个示例定义：
+
+country:
+    label: Country
+    type: dropdown
+
+state:
+    label: State
+    type: dropdown
+    dependsOn: country
+
+In the above example the state form field will refresh when the country field has a changed value. When this occurs, the current form data will be filled in the model so the dropdown options can use it.
+在上述示例中，当国家/地区字段具有更改的值时，状态窗体字段将刷新。 当这种情况发生时，当前的表单数据将被填充到模型中，因此下拉选项可以使用它。
+
+public function getCountryOptions()
+{
+    return ['au' => 'Australia', 'ca' => 'Canada'];
+}
+
+public function getStateOptions()
+{
+    if ($this->country == 'au') {
+        return ['act' => 'Capital Territory', 'qld' => 'Queensland', ...];
+    }
+    elseif ($this->country == 'ca') {
+        return ['bc' => 'British Columbia', 'on' => 'Ontario', ...];
+    }
+}
+
+This example is useful for manipulating the model values, but it does not have access to the form field definitions. You can filter the form fields by defining a filterFields method inside the model, described in the Filtering form fields section.
+此示例对于操作模型值很有用，但它无法访问表单域定义。 您可以通过在模型中定义一个filterFields方法来过滤表单域，如“过滤表单域”部分所述。
+
+Preventing a field from being submitted
+防止一个字段被提交
+
+Sometimes you may need to prevent a field from being submitted. In order to do that, just add an underscore (_) before the name of the field in the form configuration file. Form fields beginning with an underscore are purged automatically and no longer saved to the model.
+有时您可能需要防止提交一个字段。 为了做到这一点，只需在表单配置文件中的字段名称之前添加下划线（_）即可。 以下划线开头的表单域被自动清除，不再保存到模型中。
+
+address:
+    label: Title
+    type: text
+
+_map:
+    label: Point your address on the map
+    type: mapviewer
+
+Extending form behavior
+扩展表单行为
+
+Sometimes you may wish to modify the default form behavior and there are several ways you can do this.
+有时您可能希望修改默认表单行为，有几种方法可以执行此操作。
+
+Overriding controller action
+覆盖控制器动作
+
+You can use your own logic for the create, update or preview action method in the controller, then optionally call the Form behavior parent method.
+您可以使用自己的逻辑在控制器中创建，更新或预览操作方法，然后选择调用Form行为父方法。
+
+public function update($recordId, $context = null)
+{
+    //
+    // Do any custom code here
+    //
+
+    // Call the FormController behavior update() method
+    return $this->asExtension('FormController')->update($recordId, $context);
+}
+
+Extending model query
+扩展模型查询
+
+The lookup query for the form database model can be extended by overriding the formExtendQuery method inside the controller class. This example will ensure that soft deleted records can still be found and updated, by applying the withTrashed scope to the query:
+可以通过覆盖控制器类中的formExtendQuery方法来扩展表单数据库模型的查询查询。 此示例将通过将withTrashed范围应用于查询来确保仍然可以找到和更新软删除的记录：
+
+public function formExtendQuery($query)
+{
+    $query->withTrashed();
+}
+
+Extending form fields
+扩展表单域
+
+You can extend the fields of another controller from outside by calling the extendFormFields static method on the controller class. This method can take three arguments, $form will represent the Form widget object, $model represents the model used by the form and $context is a string containing the form context. Take this controller for example:
+您可以通过调用controller类上的extendFormFields static方法从外部扩展另一个控制器的字段。 此方法可以使用三个参数，$ form将表示窗体小部件对象，$ model表示窗体使用的模型，$ context是包含表单上下文的字符串。 以此控制器为例：
+
+class Categories extends \Backend\Classes\Controller
+{
+    public $implement = ['Backend.Behaviors.FormController'];
+
+    public $formConfig = 'form_config.yaml';
+}
+
+Using the extendFormFields method you can add extra fields to any form rendered by this controller. Since this has the potential to affect all forms used by this controller, it is a good idea to check the $model is of the correct type. Here is an example:
+使用extendFormFields方法，您可以向此控制器呈现的任何表单添加额外的字段。 由于这有可能影响此控制器使用的所有形式，因此最好检查$模型是否正确。 这是一个例子：
+
+Categories::extendFormFields(function($form, $model, $context)
+{
+    if (!$model instanceof MyModel) {
+        return;
+    }
+
+    $form->addFields([
+        'my_field' => [
+            'label'   => 'My Field',
+            'comment' => 'This is a custom field I have added.',
+        ],
+    ]);
+
+});
+
+You can also extend the form fields internally by overriding the formExtendFields method inside the controller class. This will only affect the form used by the FormController behavior.
+您还可以通过覆盖controller类中的formExtendFields方法来内部扩展表单域。 这只会影响FormController行为使用的格式。
+
+class Categories extends \Backend\Classes\Controller
+{
+    [...]
+
+    public function formExtendFields($form)
+    {
+        $form->addFields([...]);
+    }
+}
+
+The following methods are available on the $form object.
+$ form对象可以使用以下方法。
+
+Method	         Description
+addFields	      adds new fields to the outside area
+addTabFields	       adds new fields to the tabbed area
+addSecondaryTabFields	adds new fields to the secondary tabbed area
+removeField	        remove a field from the tabbed area
+
+Each method takes an array of fields similar to the form field configuration.
+
+Filtering form fields
+过滤表单域
+
+You can filter the form field definitions by overriding the filterFields method inside the Model used. This allows you to manipulate visibility and other field properties based on the model data. The method takes two arguments $fields will represent an object of the fields already defined by the field configuration and $context represents the active form context.
+您可以通过覆盖所使用的Model中的filterFields方法来过滤表单域定义。 这允许您根据模型数据操纵可见性和其他字段属性。 该方法有两个参数：$ fields将表示已由字段配置定义的字段的对象，$ context表示活动表单上下文。
+
+public function filterFields($fields, $context = null)
+{
+    if ($this->source_type == 'http') {
+        $fields->source_url->hidden = false;
+        $fields->git_branch->hidden = true;
+    }
+    elseif ($this->source_type == 'git') {
+        $fields->source_url->hidden = false;
+        $fields->git_branch->hidden = false;
+    }
+    else {
+        $fields->source_url->hidden = true;
+        $fields->git_branch->hidden = true;
+    }
+}
+
+The above example will set the hidden flag on certain fields by checking the value of the Model attribute source_type. This logic will be applied when the form first loads and also when updated by a defined field dependency.
+上述示例将通过检查Model属性source_type的值来设置某些字段的隐藏标志。 这种逻辑将在表单首次加载时也被应用，并且也被定义的字段依赖性更新。
+
+Validating form fields
+
+To validate the fields of your form you can make use of the Validation trait in your model.
+
+要验证表单的字段，您可以使用模型中的验证特征。
