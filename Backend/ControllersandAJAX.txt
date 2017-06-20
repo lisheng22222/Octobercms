@@ -103,16 +103,24 @@ Passing data to views
 
 Usually when you build the back-end user interface you can use the controller behaviors, described below, and don't need to pass any variables directly to your views. However you can do it with the controller's $vars property:
 通常当您构建后端用户界面时，您可以使用下面描述的控制器行为，并且不需要将任何变量直接传递给您的视图。 但是，您可以使用控制器的$ vars属性来执行此操作：
+
 $this->vars['var'] = 'value';
+
 The variables passed with the $vars property can be accessed in the view code directly:
+使用$ vars属性传递的变量可以直接在视图代码中访问：
 
 <p>The variable value is <?= $var ?></p>
+
 Setting the navigation context
+设置导航上下文
 
 Plugins can register the back-end navigation menus and submenus in the plugin registration file. The navigation context determines what back-end menu and submenu are active for the current back-end page. You can set the navigation context with the BackendMenu class:
+插件可以在插件注册文件中注册后端导航菜单和子菜单。 导航上下文确定当前后端页面的后端菜单和子菜单处于活动状态。 您可以使用BackendMenu类设置导航上下文：
 
 BackendMenu::setContext('Acme.Blog', 'blog', 'categories');
+
 The first parameter specifies the author and plugin names. The second parameter sets the menu code. The optional third parameter specifies the submenu code. Usually you call the BackendMenu::setContext in the controller constructor.
+第一个参数指定作者和插件名称。 第二个参数设置菜单代码。 可选的第三个参数指定子菜单代码。 通常你会在控制器构造函数中调用BackendMenu :: setContext。
 
 namespace Acme\Blog\Controllers;
 
@@ -124,18 +132,26 @@ public function __construct()
 
     BackendMenu::setContext('Acme.Blog', 'blog', 'categories');
 }
+
 You can set the title of the back-end page with the $pageTitle property of the controller class (note that the form and list behaviors can do it for you):
+您可以使用控制器类的$ pageTitle属性设置后端页面的标题（请注意，表单和列表行为可以为您执行）：
 
 $this->pageTitle = 'Blog categories';
+
 Using AJAX handlers
+使用AJAX处理程序
 
 The back-end AJAX framework uses the same AJAX library as the front-end pages. The library is loaded automatically on the back-end pages.
+后端AJAX框架使用与前端页面相同的AJAX库。 库将自动加载到后端页面。
 
 Back-end AJAX handlers
+后端AJAX处理程序
 
 The back-end AJAX handlers can be defined in the controller class or widgets. In the controller class the AJAX handlers are defined as public methods with the name starting with "on" string: onCreateTemplate, onGetTemplateList, etc.
+后端AJAX处理程序可以在控制器类或小部件中定义。 在控制器类中，AJAX处理程序被定义为公共方法，名称以“on”字符串开头：onCreateTemplate，onGetTemplateList等。
 
 Back-end AJAX handlers can return an array of data, throw an exception or redirect to another page (see AJAX event handlers). You can use $this->vars to set variables and the controller's makePartial method to render a partial and return its contents as a part of the response data.
+后端AJAX处理程序可以返回数据数组，抛出异常或重定向到另一个页面（请参阅AJAX事件处理程序）。 您可以使用$ this-> vars设置变量和控制器的makePartial方法来渲染一个部分，并将其内容作为响应数据的一部分返回。
 
 public function onOpenTemplate()
 {
@@ -149,14 +165,18 @@ public function onOpenTemplate()
         'partialContents' => $this->makePartial('some-partial')
     ];
 }
+
 Triggering AJAX requests
+触发AJAX请求
 
 The AJAX request can be triggered with the data attributes API or the JavaScript API. Please see the front-end AJAX library for details. The following example shows how to trigger a request with a back-end button.
-
+可以使用数据属性API或JavaScript API触发AJAX请求。 有关详细信息，请参阅前端AJAX库。 以下示例显示如何使用后端按钮触发请求。
 <button
     type="button"
     data-request="onDoSomething"
     class="btn btn-default">
     Do something
 </button>
+
 Note: You can specifically target the AJAX handler of a widget using a prefix widget::onName. See the widget AJAX handler article for more details.
+注意：您可以使用前缀widget :: onName专门定位小部件的AJAX处理程序。 有关更多详细信息，请参阅小部件AJAX处理程序文章。
